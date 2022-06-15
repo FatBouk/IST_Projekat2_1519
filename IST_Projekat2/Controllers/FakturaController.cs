@@ -27,7 +27,7 @@ namespace IST_Projekat2.Controllers
             return Ok(data);
         }
 
-        [HttpPost("dodajFakturu")]
+       /* [HttpPost("dodajFakturu")]
         public IActionResult dodajFakturu([FromForm]string pibStart, [FromForm]string pibEnd,[FromForm]DateTime datumStart, [FromForm]DateTime datumEnd,[FromForm]List<Stavka> stavkeLis, [FromForm]string tip)
         {
             Console.WriteLine("dodat: " + stavkeLis.Count() + "stavkeLis");
@@ -35,19 +35,83 @@ namespace IST_Projekat2.Controllers
             Faktura f = new Faktura(id, pibStart,pibEnd, datumStart,datumEnd,stavkeLis,tip);
             lst.Add(f);
             return Ok(SveFakture());
-        }
+        }*/
 
-        [HttpPost("dodajFakturu2")]
+        [HttpPost("dodajFakturu")]
         public IActionResult dodajFakturu2([FromBody]Faktura fak)
         {
             int id = lst.OrderByDescending(p => p.Id).First().Id + 1;
             fak.Id = id;
+            fak.calcCena();
             lst.Add(fak);
-            foreach (Faktura f in lst)
-            {
-                Console.WriteLine(f);
-            }
             return Ok(SveFakture());
+        }
+
+        [HttpGet("izmeniFakturu/{id}")]
+        public IActionResult IzmeniGet(int id)
+        {
+            return Ok(GetById(id));
+        }
+
+        [HttpGet("details/{id}")]
+        public IActionResult GetById(int id)
+        {
+            var faktura = lst.Where(p => p.Id == id).Select(p => p);
+            return Ok(faktura);
+        }
+
+        [HttpPost("izmeniFakturu")]
+        public IActionResult IzmeniPost([FromBody]Faktura fak)
+        {
+            Faktura f = lst.Find(f => f.Id == fak.Id);
+            if (f == null)
+            {
+                return BadRequest("Nekako ne postoji preduzece sa tim identifikatorom.");
+            }
+            f.pibStart = fak.pibStart;
+            f.pibEnd= fak.pibEnd;
+            f.datumGen = fak.datumGen;
+            f.datumRok = fak.datumRok;
+            f.stavke = fak.stavke;
+            f.calcCena();
+            f.tip = fak.tip;
+            return Ok(SveFakture());
+        }
+
+        [HttpDelete("deleteFaktura/{id}")]
+        public IActionResult DeletePreduzece(int id)
+        {
+            lst.RemoveAll(f => f.Id == id);
+            return Ok(SveFakture());
+        }
+
+
+        [HttpGet("filter/{kriterijum}")]
+        public IActionResult FiltrirajPreduzece(string kriterijum)
+        {
+            var data = lst.Where(f => f.pibStart.Contains(kriterijum) || f.pibEnd.Contains(kriterijum))
+                .Select(k => k);
+            return Ok(data);
+        }
+
+        [HttpPost("balans")]
+        public IActionResult BalansPreduzeca([FromQuery]string pibStart, [FromQuery]DateTime dateStart, [FromQuery] DateTime dateEnd)
+        {
+            double balans = 0;
+            var data = lst.Where(f => f.pibStart == pibStart && f.datumGen>dateStart && f.datumRok<dateEnd);
+            Console.WriteLine(data.Count());
+            foreach(Faktura f in data)
+            {
+                if (f.tip.ToLower() == "ulazna".ToLower())
+                {
+                    balans += f.cena;
+                }
+                else
+                {
+                    balans-= f.cena;
+                }
+            }
+            return Ok(balans);
         }
     }
 }

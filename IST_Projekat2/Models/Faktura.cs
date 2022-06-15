@@ -35,6 +35,17 @@
         {
         }
 
+        public void calcCena()
+        {
+            double sumCena = 0;
+
+            foreach (Stavka s in stavke)
+            {
+                sumCena += s.kolicina * s.cenaPoJedinici;
+            }
+            this.cena = sumCena;
+        }
+
         public override string ToString()
         {
             String strSt = "";

@@ -85,7 +85,7 @@ namespace IST_Projekat2.Controllers
         [HttpGet("filter/{kriterijum}")]
         public IActionResult FiltrirajPoNazivTip(string kriterijum)
         {
-            var data = lst.Where(p => p.Naziv.Contains(kriterijum) || p.Pib.Contains(kriterijum))
+            var data = lst.Where(p => p.Naziv.ToLower().Contains(kriterijum.ToLower()) || p.Pib.Contains(kriterijum))
                 .OrderBy(k => k.Pib)
                 .ThenBy(k => k.Naziv)
                 .Select(k => k);
