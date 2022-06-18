@@ -89,7 +89,7 @@ namespace IST_Projekat2.Controllers
         [HttpGet("filter/{kriterijum}")]
         public IActionResult FiltrirajPreduzece(string kriterijum)
         {
-            var data = lst.Where(f => f.pibStart.Contains(kriterijum) || f.pibEnd.Contains(kriterijum))
+            var data = lst.Where(f => f.pibStart.Contains(kriterijum))
                 .Select(k => k);
             return Ok(data);
         }

@@ -21,25 +21,18 @@ namespace IST_Projekat2.Controllers
             return Ok(data);
         }
 
-        [HttpGet("SvaPreduzecaPage")]
-        public IActionResult SvaPreduzecaPage([FromQuery]int page, [FromQuery]int pageSize)
+        [HttpGet("SvaPreduzecaPage/{page}/{pageSize}")]
+        public IActionResult SvaPreduzecaPage(int page, int pageSize)
         {
             var data = lst.OrderBy(p => p.Pib).ThenBy(p => p.Naziv).Skip((page-1)*pageSize).Take(pageSize);
             return Ok(data);
         }
 
         [HttpPost("dodajPreduzece")]
-        public IActionResult DodajNovoPreduzece([FromForm] string ime, [FromForm] string prezime, [FromForm] string telefon, [FromForm] string email, [FromForm] string naziv, [FromForm] string adresa, [FromForm] string pib)
+        public IActionResult DodajNovoPreduzece([FromBody] Preduzece p)
         {
-            Preduzece p = new Preduzece();
-            p.Id = lst.OrderByDescending(p => p.Id).First().Id + 1;
-            p.ImeLica = ime;
-            p.PrezimeLica = prezime;
-            p.Telefon = telefon;
-            p.Email = email;
-            p.Naziv = naziv;
-            p.Adresa = adresa;
-            p.Pib = pib;
+            int id = lst.OrderByDescending(p => p.Id).First().Id + 1;
+            p.Id = id;
             lst.Add(p);
             return Ok(SvaPreduzeca());
         }
@@ -47,48 +40,50 @@ namespace IST_Projekat2.Controllers
         [HttpGet("izmeniPreduzece/{id}")]
         public IActionResult IzmeniGet(int id)
         {
-            return Ok(GetById(id));
+            var preduzece = lst.Where(p => p.Id == id).Select(p => p);
+            return Ok(preduzece.FirstOrDefault());
         }
 
         [HttpGet("details/{id}")]
         public IActionResult GetById(int id)
         {
             var preduzece = lst.Where(p => p.Id == id).Select(p => p);
-            return Ok(preduzece);
+            return Ok(preduzece.FirstOrDefault());
         }
 
         [HttpPost("izmeniPreduzece")]
-        public IActionResult IzmeniPost([FromForm] int id,[FromForm] string ime, [FromForm] string prezime, [FromForm] string telefon, [FromForm] string email, [FromForm] string naziv, [FromForm] string adresa, [FromForm] string pib)
+        public IActionResult IzmeniPost([FromBody]Preduzece pNew)
         {
-            Preduzece p = lst.Find(p => p.Id == id);
+            Preduzece p = lst.Find(p => p.Id == pNew.Id);
             if (p == null)
             {
                 return BadRequest("Nekako ne postoji preduzece sa tim identifikatorom.");
             }
-            p.ImeLica = ime;
-            p.PrezimeLica = prezime;
-            p.Telefon = telefon;
-            p.Email = email;
-            p.Naziv= naziv;
-            p.Adresa= adresa;
-            p.Pib = pib;
-            return Ok(SvaPreduzeca());
+            p.ImeLica = pNew.ImeLica;
+            p.PrezimeLica = pNew.PrezimeLica;
+            p.Telefon = pNew.Telefon;
+            p.Email = pNew.Email;
+            p.Naziv= pNew.Naziv;
+            p.Adresa= pNew.Adresa;
+            p.Pib =pNew.Pib;
+            return Ok();
         }
 
         [HttpDelete("deletePreduzece/{id}")]
         public IActionResult DeletePreduzece(int id)
         {
             lst.RemoveAll(p => p.Id == id);
-            return Ok(SvaPreduzeca());
+            return Ok();
         }
 
-        [HttpGet("filter/{kriterijum}")]
+        [HttpGet("filter")]
         public IActionResult FiltrirajPoNazivTip(string kriterijum)
         {
             var data = lst.Where(p => p.Naziv.ToLower().Contains(kriterijum.ToLower()) || p.Pib.Contains(kriterijum))
                 .OrderBy(k => k.Pib)
                 .ThenBy(k => k.Naziv)
                 .Select(k => k);
+            if (kriterijum == "") return Ok(lst);
             return Ok(data);
         }
     }
