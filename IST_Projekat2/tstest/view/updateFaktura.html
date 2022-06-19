@@ -25,30 +25,26 @@
         <br>
       <div class="alert alert-danger" role="alert" id="alert" style="display: none;">
       </div>
-      <form action="/addFaktura" method="POST" onsubmit="//return validateForma()">
-        <select class="form-select" aria-label="Default select example" name="pibStart">
+      <form action="/updateFaktura" method="POST" onsubmit="//return validateForma()">
+        <input type="text" class="form-control" id="exampleFormControlInput1" placeholder="Kategorija" name="id" value="##{ID}" style="display: none"/>
+        <select class="form-select" aria-label="Default select example" name="pibStart" value="##val1">
           ##sel1
         </select>
         <br>
-        <select class="form-select" aria-label="Default select example" name="pibEnd">
+        <select class="form-select" aria-label="Default select example" name="pibEnd" value="##val2">
           ##sel2
         </select>
         <br>
-        <input type="date" class="form-control" id="datum" name="datumRok" />
+        <input type="date" class="form-control" id="datum" name="datumRok" value="##datumRok"/>
         <br>
         <div id="stavke">
           <a class="btn btn-outline-secondary w-100" onclick="dodajStavku()">+</a>
-          <div class="row m-3">
-            <input type="text" class="form-control col" placeholder="naziv" id="stavka" name="stavka[0][naziv]" />
-            <input type="text" class="form-control col" id="stavka" placeholder="cenaPoJedinici" name="stavka[0][cenaPoJedinici]"/>
-            <input type="text" class="form-control col" id="stavka" placeholder="jedinicaMere" name="stavka[0][jedinicaMere]"/>
-            <input type="text" class="form-control col" id="stavka" placeholder="kolicina" name="stavka[0][kolicina]"/>
-          </div>
+          ##stavke
         </div> 
         <br>
-        <select class="form-select" aria-label="Default select example" name="tip">
-          <option value="ulazna">Ulazna</option>
-          <option value="izlazna">Izlazna</option>
+        <select class="form-select" aria-label="Default select example" name="tip" value="##tip">
+          <option value="Ulazna">Ulazna</option>
+          <option value="Izlazna">Izlazna</option>
         </select>
         <br>
         <button type="submit" class="btn btn-primary">Dodaj fakturu</button>
@@ -59,7 +55,7 @@
     integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
     crossorigin="anonymous"></script>
   <script>
-    let stavkaNum=0;
+    let stavkaNum=document.querySelectorAll("#stavkaRow").length-1;
     function dodajStavku(){
       stavkaNum+=1;
       document.querySelector("#stavke").innerHTML += `

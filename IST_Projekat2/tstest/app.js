@@ -1,3 +1,4 @@
+"use strict";
 /* {
     "id": 2,
     "imeLica": "Dva",
@@ -8,6 +9,7 @@
     "adresa": "Beograd",
     "pib": "299999999"
   },*/
+exports.__esModule = true;
 // Language: typescript
 // Path: app.ts
 var express = require("express");
@@ -17,6 +19,7 @@ var axios = require("axios");
 var path = require("path");
 var response = require("express").response;
 var port = 5000;
+var alert = require("alert");
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 var RadSaPrikazom = /** @class */ (function () {
@@ -46,7 +49,7 @@ var RadSaPrikazom = /** @class */ (function () {
         fakture[page - 1].stavke.forEach(function (s) {
             stavkePrikaz += "<p>Naziv: ".concat(s.naziv, " Cena po ").concat(s.jedinicaMere, ": ").concat(s.cenaPoJedinici, " Kolicina: ").concat(s.kolicina, "</p><hr>");
         });
-        prikaz += "\n                <tr>\n                    <td>".concat(fakture[page - 1].pibStart, "</td>\n                    <td>").concat(fakture[page - 1].pibEnd, "</td>\n                    <td>").concat(new Date(fakture[page - 1].datumGen).toISOString().split('T')[0], "</td>\n                    <td>").concat(new Date(fakture[page - 1].datumRok).toISOString().split('T')[0], "</td>\n                    <td>").concat(stavkePrikaz, "</td>\n                    <td>").concat(fakture[page - 1].cena, "</td>\n                    <td>").concat(fakture[page - 1].tip, "</td>\n                    <td><a href=\"/izmeniPreduzece/").concat(fakture[page - 1].id, "\">Izmeni</a></td>\n                    <td><a href=\"/delete/").concat(fakture[page - 1].id, "\">Obrisi</a></td>\n                </tr>\n            ");
+        prikaz += "\n                <tr>\n                    <td>".concat(fakture[page - 1].pibStart, "</td>\n                    <td>").concat(fakture[page - 1].pibEnd, "</td>\n                    <td>").concat(new Date(fakture[page - 1].datumGen).toISOString().split('T')[0], "</td>\n                    <td>").concat(new Date(fakture[page - 1].datumRok).toISOString().split('T')[0], "</td>\n                    <td>").concat(stavkePrikaz, "</td>\n                    <td>").concat(fakture[page - 1].cena, "</td>\n                    <td>").concat(fakture[page - 1].tip, "</td>\n                    <td><a href=\"/izmeniFakturu/").concat(fakture[page - 1].id, "\">Izmeni</a></td>\n                    <td><a href=\"/deleteFaktura/").concat(fakture[page - 1].id, "\">Obrisi</a></td>\n                </tr>\n            ");
         return prikaz;
     };
     RadSaPrikazom.getDetails = function (p) {
@@ -60,7 +63,7 @@ var RadSaPrikazom = /** @class */ (function () {
         f.stavke.forEach(function (s) {
             stavkePrikaz += "<p>\u2022 Naziv: ".concat(s.naziv, " \u2022 Cena po ").concat(s.jedinicaMere, ": ").concat(s.cenaPoJedinici, " \u2022 Kolicina: ").concat(s.kolicina, "</p><hr>");
         });
-        prikaz += "\n                <tr>\n                    <td>".concat(f.pibStart, "</td>\n                    <td>").concat(f.pibEnd, "</td>\n                    <td>").concat(new Date(f.datumGen).toISOString().split('T')[0], "</td>\n                    <td>").concat(new Date(f.datumRok).toISOString().split('T')[0], "</td>\n                    <td>").concat(stavkePrikaz, "</td>\n                    <td>").concat(f.cena, "</td>\n                    <td>").concat(f.tip, "</td>\n                    <td><a href=\"/izmeniPreduzece/").concat(f.id, "\">Izmeni</a></td>\n                    <td><a href=\"/delete/").concat(f.id, "\">Obrisi</a></td>\n                </tr>\n            ");
+        prikaz += "\n                <tr>\n                    <td>".concat(f.pibStart, "</td>\n                    <td>").concat(f.pibEnd, "</td>\n                    <td>").concat(new Date(f.datumGen).toISOString().split('T')[0], "</td>\n                    <td>").concat(new Date(f.datumRok).toISOString().split('T')[0], "</td>\n                    <td>").concat(stavkePrikaz, "</td>\n                    <td>").concat(f.cena, "</td>\n                    <td>").concat(f.tip, "</td>\n                    <td><a href=\"/izmeniFakturu/").concat(f.id, "\">Izmeni</a></td>\n                    <td><a href=\"/deleteFaktura/").concat(f.id, "\">Obrisi</a></td>\n                </tr>\n            ");
         return prikaz;
     };
     return RadSaPrikazom;
@@ -166,7 +169,8 @@ app.get("/getFakturaByPreduzecePage/:id/:page", function (req, res) {
         }
         res.send(RadSaPrikazom.procitajPogledZaNaziv("indexPage").replace("#{data}", RadSaPrikazom.getPageFaktura(response.data, req.params.page)).replace("##td", td).replace("##btn", buttons).replace("##{pib}", req.params.id));
     })["catch"](function (error) {
-        console.log(error);
+        alert("Ne postoje fakture za ovo preduzece.");
+        res.redirect("/svaPreduzeca");
     });
 });
 //FAKTURE
@@ -215,6 +219,73 @@ app.post("/filterFaktura", function (req, res) {
         res.send(RadSaPrikazom.procitajPogledZaNaziv("indexPage").replace("#{data}", RadSaPrikazom.getArrayFaktura(response.data)).replace("##td", td));
     })["catch"](function (error) {
         console.log(error);
+    });
+});
+app.get("/deleteFaktura/:id", function (req, res) {
+    axios["delete"]("http://localhost:5134/api/Faktura/deleteFaktura/".concat(req.params["id"])).then(function (response) { res.redirect("/sveFakture"); });
+    //setTimeout(() => {  res.redirect("/svaPreduzeca"); }, 500);
+});
+app.get("/izmeniFakturu/:id", function (req, res) {
+    var select = "";
+    var view = RadSaPrikazom.procitajPogledZaNaziv("updateFaktura");
+    axios.get("http://localhost:5134/api/Preduzece").then(function (response) {
+        response.data.forEach(function (element) {
+            select += "<option value=\"".concat(element.pib, "\">").concat(element.naziv, "</option>");
+        });
+        view = view.replace("##sel1", select).replace("##sel2", select);
+    }).then(function () {
+        axios.get("http://localhost:5134/api/Faktura/izmeniFakturu/".concat(req.params["id"]))
+            .then(function (response) {
+            var stavke = response.data.stavke;
+            var num = 0;
+            var stavkePrikaz = "";
+            stavke.forEach(function (s) {
+                stavkePrikaz += "<div class=\"row m-3\" id=\"stavkaRow\">\n                    <input type=\"text\" class=\"form-control col\" placeholder=\"naziv\" id=\"stavka\" name=\"stavka[".concat(num, "][naziv]\" value=\"").concat(s.naziv, "\"/>\n                    <input type=\"text\" class=\"form-control col\" id=\"stavka\" placeholder=\"cenaPoJedinici\" name=\"stavka[").concat(num, "][cenaPoJedinici]\" value=\"").concat(s.cenaPoJedinici, "\"/>\n                    <input type=\"text\" class=\"form-control col\" id=\"stavka\" placeholder=\"jedinicaMere\" name=\"stavka[").concat(num, "][jedinicaMere]\" value=\"").concat(s.jedinicaMere, "\"/>\n                    <input type=\"text\" class=\"form-control col\" id=\"stavka\" placeholder=\"kolicina\" name=\"stavka[").concat(num, "][kolicina]\" value=\"").concat(s.kolicina, "\"/>\n              </div>");
+                num += 1;
+            });
+            var id = response.data.id;
+            var datumRok = new Date(response.data.datumRok);
+            var tip = response.data.tip;
+            view = view.replace("##{ID}", id);
+            view = view.replace("##datumRok", datumRok);
+            view = view.replace("##stavke", stavkePrikaz);
+            view = view.replace("##tip", tip);
+            res.send(view);
+        })["catch"](function (error) {
+            console.log(error);
+        });
+    });
+});
+app.post("/updateFaktura", function (req, res) {
+    console.log(req.body);
+    axios.post("http://localhost:5134/api/Faktura/izmeniFakturu", {
+        id: req.body.id,
+        pibStart: req.body.pibStart,
+        pibEnd: req.body.pibEnd,
+        datumGen: new Date(),
+        datumRok: new Date(req.body.datumRok),
+        stavke: req.body.stavka,
+        tip: req.body.tip
+    })["catch"](function (error) {
+        console.log("Faktura nije izmenjena");
+    }).then(function (response) { res.redirect("/sveFakture"); });
+});
+app.get("/balans", function (req, res) {
+    var select = "";
+    axios.get("http://localhost:5134/api/Preduzece").then(function (response) {
+        response.data.forEach(function (element) {
+            select += "<option value=\"".concat(element.pib, "\">").concat(element.naziv, "</option>");
+        });
+        res.send(RadSaPrikazom.procitajPogledZaNaziv("balans").replace("##sel1", select));
+    });
+});
+app.post("/balans", function (req, res) {
+    var select = "";
+    axios.post("http://localhost:5134/api/Faktura/balans?pibStart=".concat(req.body.pibStart, "&dateStart=").concat(req.body.dateStart, "&dateEnd=").concat(req.body.dateEnd)).then(function (response) {
+        console.log("Datumstart: ".concat(req.body.dateStart));
+        console.log("Datumend: ".concat(req.body.dateEnd));
+        alert("Balans za: ".concat(req.body.pibStart, " u periodu od ").concat(req.body.dateStart, " do ").concat(req.body.dateEnd, " je: ").concat(response.data));
+        res.redirect("/balans");
     });
 });
 app.listen(port, function () {

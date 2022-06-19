@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "alert": "^5.0.12",
     "axios": "^0.27.2",
     "express": "^4.18.1",
     "typescript": "^4.7.3"

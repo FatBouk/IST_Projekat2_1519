@@ -20,6 +20,7 @@ const axios = require("axios");
 const path = require("path");
 const { response } = require("express");
 const port = 5000;
+import * as alert from 'alert';
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -129,8 +130,8 @@ class RadSaPrikazom {
                     <td>${stavkePrikaz}</td>
                     <td>${fakture[page - 1].cena}</td>
                     <td>${fakture[page - 1].tip}</td>
-                    <td><a href="/izmeniPreduzece/${fakture[page - 1].id}">Izmeni</a></td>
-                    <td><a href="/delete/${fakture[page - 1].id}">Obrisi</a></td>
+                    <td><a href="/izmeniFakturu/${fakture[page - 1].id}">Izmeni</a></td>
+                    <td><a href="/deleteFaktura/${fakture[page - 1].id}">Obrisi</a></td>
                 </tr>
             `;
         return prikaz
@@ -170,8 +171,8 @@ class RadSaPrikazom {
                     <td>${stavkePrikaz}</td>
                     <td>${f.cena}</td>
                     <td>${f.tip}</td>
-                    <td><a href="/izmeniPreduzece/${f.id}">Izmeni</a></td>
-                    <td><a href="/delete/${f.id}">Obrisi</a></td>
+                    <td><a href="/izmeniFakturu/${f.id}">Izmeni</a></td>
+                    <td><a href="/deleteFaktura/${f.id}">Obrisi</a></td>
                 </tr>
             `;
         return prikaz
@@ -319,10 +320,10 @@ app.get("/getFakturaByPreduzecePage/:id/:page", (req, res) => {
             buttons += `<a href="/getFakturaByPreduzecePage/${req.params.id}/${i + 1}" class="btn btn-primary m-1">${i + 1}</a>`;
         }
         res.send(RadSaPrikazom.procitajPogledZaNaziv("indexPage").replace("#{data}", RadSaPrikazom.getPageFaktura(response.data, req.params.page)).replace("##td", td).replace("##btn", buttons).replace("##{pib}", req.params.id));
-    })
-        .catch((error) => {
-            console.log(error);
-        });
+    }).catch((error) => {
+        alert("Ne postoje fakture za ovo preduzece.");
+        res.redirect("/svaPreduzeca");
+    });
 });
 
 
@@ -365,11 +366,11 @@ app.get("/addFaktura", (req, res) => {
     let select = ``
     axios.get("http://localhost:5134/api/Preduzece").then((response: preduzeceResponse) => {
         response.data.forEach(element => {
-            select+=`<option value="${element.pib}">${element.naziv}</option>`
+            select += `<option value="${element.pib}">${element.naziv}</option>`
         })
-        res.send(RadSaPrikazom.procitajPogledZaNaziv("addFaktura").replace("##sel1",select).replace("##sel2",select));
+        res.send(RadSaPrikazom.procitajPogledZaNaziv("addFaktura").replace("##sel1", select).replace("##sel2", select));
     });
-    
+
 });
 
 app.post("/addFaktura", (req, res) => {
@@ -381,9 +382,9 @@ app.post("/addFaktura", (req, res) => {
         datumRok: new Date(req.body.datumRok),
         stavke: req.body.stavka,
         tip: req.body.tip
-    }).catch((error)=>{
+    }).catch((error) => {
         console.log("Faktura nije dodata");
-    }).then((response)=>{res.redirect("/sveFakture")});
+    }).then((response) => { res.redirect("/sveFakture") });
 
 });
 
@@ -403,6 +404,89 @@ app.post("/filterFaktura", (req, res) => {
             console.log(error);
         });
 });
+
+app.get("/deleteFaktura/:id", (req, res) => {
+    axios.delete(`http://localhost:5134/api/Faktura/deleteFaktura/${req.params["id"]}`).then((response) => { res.redirect("/sveFakture") });
+    //setTimeout(() => {  res.redirect("/svaPreduzeca"); }, 500);
+
+});
+
+app.get("/izmeniFakturu/:id", (req, res) => {
+    let select = ``;
+    let view = RadSaPrikazom.procitajPogledZaNaziv("updateFaktura");
+    axios.get("http://localhost:5134/api/Preduzece").then((response: preduzeceResponse) => {
+        response.data.forEach(element => {
+            select += `<option value="${element.pib}">${element.naziv}</option>`
+        })
+        view = view.replace("##sel1", select).replace("##sel2", select);
+    }).then(function () {
+        axios.get(`http://localhost:5134/api/Faktura/izmeniFakturu/${req.params["id"]}`)
+            .then((response: fakturaSingle) => {
+                let stavke = response.data.stavke;
+                let num = 0;
+                let stavkePrikaz = "";
+                stavke.forEach(s => {
+                    stavkePrikaz += `<div class="row m-3" id="stavkaRow">
+                    <input type="text" class="form-control col" placeholder="naziv" id="stavka" name="stavka[${num}][naziv]" value="${s.naziv}"/>
+                    <input type="text" class="form-control col" id="stavka" placeholder="cenaPoJedinici" name="stavka[${num}][cenaPoJedinici]" value="${s.cenaPoJedinici}"/>
+                    <input type="text" class="form-control col" id="stavka" placeholder="jedinicaMere" name="stavka[${num}][jedinicaMere]" value="${s.jedinicaMere}"/>
+                    <input type="text" class="form-control col" id="stavka" placeholder="kolicina" name="stavka[${num}][kolicina]" value="${s.kolicina}"/>
+              </div>`;
+
+                    num += 1;
+                })
+                let id = response.data.id
+                let datumRok = new Date(response.data.datumRok)
+                let tip = response.data.tip
+                view = view.replace("##{ID}", id)
+                view = view.replace("##datumRok", datumRok)
+                view = view.replace("##stavke", stavkePrikaz)
+                view = view.replace("##tip", tip)
+                res.send(view)
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+    });
+
+});
+
+app.post("/updateFaktura", (req, res) => {
+    console.log(req.body);
+    axios.post("http://localhost:5134/api/Faktura/izmeniFakturu", {
+        id: req.body.id,
+        pibStart: req.body.pibStart,
+        pibEnd: req.body.pibEnd,
+        datumGen: new Date(),
+        datumRok: new Date(req.body.datumRok),
+        stavke: req.body.stavka,
+        tip: req.body.tip
+    }).catch((error) => {
+        console.log("Faktura nije izmenjena");
+    }).then((response) => { res.redirect("/sveFakture") });
+
+});
+
+app.get("/balans", (req, res) => {
+    let select = ``
+    axios.get("http://localhost:5134/api/Preduzece").then((response: preduzeceResponse) => {
+        response.data.forEach(element => {
+            select += `<option value="${element.pib}">${element.naziv}</option>`
+        })
+        res.send(RadSaPrikazom.procitajPogledZaNaziv("balans").replace("##sel1", select));
+    });
+});
+
+app.post("/balans", (req, res) => {
+    let select = ``
+    axios.post(`http://localhost:5134/api/Faktura/balans?pibStart=${req.body.pibStart}&dateStart=${req.body.dateStart}&dateEnd=${req.body.dateEnd}`).then((response: preduzeceResponse) => {
+        console.log(`Datumstart: ${req.body.dateStart}`);
+        console.log(`Datumend: ${req.body.dateEnd}`);
+        alert(`Balans za: ${req.body.pibStart} u periodu od ${req.body.dateStart} do ${req.body.dateEnd} je: ${response.data}`);
+        res.redirect("/balans");
+    });
+});
+
 
 app.listen(port, () => {
     console.log(`klijent na portu ${port}`);
