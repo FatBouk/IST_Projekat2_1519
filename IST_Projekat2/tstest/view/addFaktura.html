@@ -15,22 +15,22 @@
 
 <body>
   <nav>
-    
+
   </nav>
   <div class="container ">
     <br>
     <a href="/sveFakture" class="btn btn-outline-secondary w-100 text-center">Sve fakture</a>
 
     <div>
-        <br>
+      <br>
       <div class="alert alert-danger" role="alert" id="alert" style="display: none;">
       </div>
-      <form action="/addFaktura" method="POST" onsubmit="//return validateForma()">
-        <select class="form-select" aria-label="Default select example" name="pibStart">
+      <form action="/addFaktura" method="POST" onsubmit="return validateForma()">
+        <select class="form-select" aria-label="Default select example" name="pibStart" id="sel1">
           ##sel1
         </select>
         <br>
-        <select class="form-select" aria-label="Default select example" name="pibEnd">
+        <select class="form-select" aria-label="Default select example" name="pibEnd" id="sel2">
           ##sel2
         </select>
         <br>
@@ -40,11 +40,14 @@
           <a class="btn btn-outline-secondary w-100" onclick="dodajStavku()">+</a>
           <div class="row m-3">
             <input type="text" class="form-control col" placeholder="naziv" id="stavka" name="stavka[0][naziv]" />
-            <input type="text" class="form-control col" id="stavka" placeholder="cenaPoJedinici" name="stavka[0][cenaPoJedinici]"/>
-            <input type="text" class="form-control col" id="stavka" placeholder="jedinicaMere" name="stavka[0][jedinicaMere]"/>
-            <input type="text" class="form-control col" id="stavka" placeholder="kolicina" name="stavka[0][kolicina]"/>
+            <input type="number" class="form-control col" id="stavka" placeholder="cenaPoJedinici"
+              name="stavka[0][cenaPoJedinici]" />
+            <input type="text" class="form-control col" id="stavka" placeholder="jedinicaMere"
+              name="stavka[0][jedinicaMere]" />
+            <input type="number" class="form-control col" id="stavka" placeholder="kolicina"
+              name="stavka[0][kolicina]" />
           </div>
-        </div> 
+        </div>
         <br>
         <select class="form-select" aria-label="Default select example" name="tip">
           <option value="Ulazna">Ulazna</option>
@@ -59,58 +62,44 @@
     integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
     crossorigin="anonymous"></script>
   <script>
-    let stavkaNum=0;
-    function dodajStavku(){
-      stavkaNum+=1;
+    let stavkaNum = 0;
+    function dodajStavku() {
+      stavkaNum += 1;
       document.querySelector("#stavke").innerHTML += `
       <div class="row m-3">
             <input type="text" class="form-control col" placeholder="naziv" id="stavka" name="stavka[${stavkaNum}][naziv]" />
-            <input type="text" class="form-control col" id="stavka" placeholder="cenaPoJedinici" name="stavka[${stavkaNum}][cenaPoJedinici]"/>
+            <input type="number" class="form-control col" id="stavka" placeholder="cenaPoJedinici" name="stavka[${stavkaNum}][cenaPoJedinici]"/>
             <input type="text" class="form-control col" id="stavka" placeholder="jedinicaMere" name="stavka[${stavkaNum}][jedinicaMere]"/>
-            <input type="text" class="form-control col" id="stavka" placeholder="kolicina" name="stavka[${stavkaNum}][kolicina]"/>
+            <input type="number" class="form-control col" id="stavka" placeholder="kolicina" name="stavka[${stavkaNum}][kolicina]"/>
       </div>
       `;
       return false;
     }
-
     function validateForma() {
       document.getElementById("alert").innerHTML = ""
-      flag = true;
-      if (document.querySelector("#ime").value == "") {
-        document.getElementById("alert").innerHTML += "Niste popunili ime!<br>"
-        document.getElementById("alert").style.display="block"
+      let date1 = new Date();
+      let date2 = new Date(document.getElementById("datum").value);
+      let flag = true;
+      if (document.querySelector("#sel1").value == document.querySelector("#sel2").value) {
+        document.getElementById("alert").innerHTML += "Pibovi ne mogu da budu isti.<br>"
+        document.getElementById("alert").style.display = "block"
         flag = false;
       }
-      if (document.querySelector("#prezime").value == "") {
-        document.getElementById("alert").innerHTML += "Niste popunili prezime!<br>"
-        document.getElementById("alert").style.display="block"
+      if (date2 < date1) {
+        document.getElementById("alert").innerHTML += "Datum ne moze biti u proslosti.<br>"
+        document.getElementById("alert").style.display = "block"
         flag = false;
       }
-      if (document.querySelector("#telefon").value == "") {
-        document.getElementById("alert").innerHTML += "Niste popunili telefon!<br>"
-        document.getElementById("alert").style.display="block"
-        flag = false;
-      }
-      if (document.querySelector("#naziv").value == "") {
-        document.getElementById("alert").innerHTML += "Proverite naziv!<br>"
-        document.getElementById("alert").style.display="block"
-        flag = false;
-      }
-      if (document.querySelector("#adresa").value == "") {
-        document.getElementById("alert").innerHTML += "Niste popunili adresu!<br>"
-        document.getElementById("alert").style.display="block"
-        flag = false;
-      }
-      if (document.querySelector("#mail").value == "") {
-        document.getElementById("alert").innerHTML += "Niste popunili mejl!<br>"
-        document.getElementById("alert").style.display="block"
-        flag = false;
-      }
-      if (document.querySelector("#pib").value == "") {
-        document.getElementById("alert").innerHTML += "Niste popunili pib!<br>"
-        document.getElementById("alert").style.display="block"
-        flag = false;
-      }
+      let stavkeDiv = document.querySelectorAll("#stavka");
+      stavkeDiv.forEach(s => {
+        if (s.value == "") {
+          flag = false;
+          s.style.border = "1px solid red";
+        }
+        else {
+          s.style.border = "1px solid grey";
+        }
+      });
       return flag;
     }
   </script>

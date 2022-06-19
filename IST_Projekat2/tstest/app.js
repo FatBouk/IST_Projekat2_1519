@@ -193,6 +193,11 @@ app.get("/detailsFaktura/:id", function (req, res) {
 app.get("/addFaktura", function (req, res) {
     var select = "";
     axios.get("http://localhost:5134/api/Preduzece").then(function (response) {
+        if (response.data.length == 0) {
+            alert("Nema preduzeca za dodavanje fakture.");
+            res.redirect("/addPreduzece");
+            return false;
+        }
         response.data.forEach(function (element) {
             select += "<option value=\"".concat(element.pib, "\">").concat(element.naziv, "</option>");
         });
@@ -209,7 +214,7 @@ app.post("/addFaktura", function (req, res) {
         stavke: req.body.stavka,
         tip: req.body.tip
     })["catch"](function (error) {
-        console.log("Faktura nije dodata");
+        alert("Faktura nije dodata");
     }).then(function (response) { res.redirect("/sveFakture"); });
 });
 //filterIznosStavka/{pib}/{kriterijum}/{value}
@@ -240,7 +245,7 @@ app.get("/izmeniFakturu/:id", function (req, res) {
             var num = 0;
             var stavkePrikaz = "";
             stavke.forEach(function (s) {
-                stavkePrikaz += "<div class=\"row m-3\" id=\"stavkaRow\">\n                    <input type=\"text\" class=\"form-control col\" placeholder=\"naziv\" id=\"stavka\" name=\"stavka[".concat(num, "][naziv]\" value=\"").concat(s.naziv, "\"/>\n                    <input type=\"text\" class=\"form-control col\" id=\"stavka\" placeholder=\"cenaPoJedinici\" name=\"stavka[").concat(num, "][cenaPoJedinici]\" value=\"").concat(s.cenaPoJedinici, "\"/>\n                    <input type=\"text\" class=\"form-control col\" id=\"stavka\" placeholder=\"jedinicaMere\" name=\"stavka[").concat(num, "][jedinicaMere]\" value=\"").concat(s.jedinicaMere, "\"/>\n                    <input type=\"text\" class=\"form-control col\" id=\"stavka\" placeholder=\"kolicina\" name=\"stavka[").concat(num, "][kolicina]\" value=\"").concat(s.kolicina, "\"/>\n              </div>");
+                stavkePrikaz += "<div class=\"row m-3\" id=\"stavkaRow\">\n                    <input type=\"text\" class=\"form-control col\" placeholder=\"naziv\" id=\"stavka\" name=\"stavka[".concat(num, "][naziv]\" value=\"").concat(s.naziv, "\"/>\n                    <input type=\"number\" class=\"form-control col\" id=\"stavka\" placeholder=\"cenaPoJedinici\" name=\"stavka[").concat(num, "][cenaPoJedinici]\" value=\"").concat(s.cenaPoJedinici, "\"/>\n                    <input type=\"text\" class=\"form-control col\" id=\"stavka\" placeholder=\"jedinicaMere\" name=\"stavka[").concat(num, "][jedinicaMere]\" value=\"").concat(s.jedinicaMere, "\"/>\n                    <input type=\"number\" class=\"form-control col\" id=\"stavka\" placeholder=\"kolicina\" name=\"stavka[").concat(num, "][kolicina]\" value=\"").concat(s.kolicina, "\"/>\n              </div>");
                 num += 1;
             });
             var id = response.data.id;
@@ -267,12 +272,17 @@ app.post("/updateFaktura", function (req, res) {
         stavke: req.body.stavka,
         tip: req.body.tip
     })["catch"](function (error) {
-        console.log("Faktura nije izmenjena");
+        alert("Faktura nije izmenjena");
     }).then(function (response) { res.redirect("/sveFakture"); });
 });
 app.get("/balans", function (req, res) {
     var select = "";
     axios.get("http://localhost:5134/api/Preduzece").then(function (response) {
+        if (response.data.length == 0) {
+            alert("Nema preduzeca. Molimo Vas da unesete preduzece");
+            res.redirect("/addPreduzece");
+            return false;
+        }
         response.data.forEach(function (element) {
             select += "<option value=\"".concat(element.pib, "\">").concat(element.naziv, "</option>");
         });
@@ -280,11 +290,17 @@ app.get("/balans", function (req, res) {
     });
 });
 app.post("/balans", function (req, res) {
+    var _a;
     var select = "";
-    axios.post("http://localhost:5134/api/Faktura/balans?pibStart=".concat(req.body.pibStart, "&dateStart=").concat(req.body.dateStart, "&dateEnd=").concat(req.body.dateEnd)).then(function (response) {
+    var date1 = req.body.dateStart;
+    var date2 = req.body.dateEnd;
+    if (date1 > date2) {
+        _a = [date2, date1], date1 = _a[0], date2 = _a[1];
+    }
+    axios.post("http://localhost:5134/api/Faktura/balans?pibStart=".concat(req.body.pibStart, "&dateStart=").concat(date1, "&dateEnd=").concat(date2)).then(function (response) {
         console.log("Datumstart: ".concat(req.body.dateStart));
         console.log("Datumend: ".concat(req.body.dateEnd));
-        alert("Balans za: ".concat(req.body.pibStart, " u periodu od ").concat(req.body.dateStart, " do ").concat(req.body.dateEnd, " je: ").concat(response.data));
+        alert("Balans za: ".concat(req.body.pibStart, " u periodu od ").concat(date1, " do ").concat(date2, " je: ").concat(response.data));
         res.redirect("/balans");
     });
 });

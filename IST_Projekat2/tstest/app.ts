@@ -365,6 +365,11 @@ app.get("/detailsFaktura/:id", (req, res) => {
 app.get("/addFaktura", (req, res) => {
     let select = ``
     axios.get("http://localhost:5134/api/Preduzece").then((response: preduzeceResponse) => {
+        if (response.data.length == 0) {
+            alert("Nema preduzeca za dodavanje fakture.");
+            res.redirect("/addPreduzece");
+            return false;
+        }
         response.data.forEach(element => {
             select += `<option value="${element.pib}">${element.naziv}</option>`
         })
@@ -383,7 +388,7 @@ app.post("/addFaktura", (req, res) => {
         stavke: req.body.stavka,
         tip: req.body.tip
     }).catch((error) => {
-        console.log("Faktura nije dodata");
+        alert("Faktura nije dodata");
     }).then((response) => { res.redirect("/sveFakture") });
 
 });
@@ -428,9 +433,9 @@ app.get("/izmeniFakturu/:id", (req, res) => {
                 stavke.forEach(s => {
                     stavkePrikaz += `<div class="row m-3" id="stavkaRow">
                     <input type="text" class="form-control col" placeholder="naziv" id="stavka" name="stavka[${num}][naziv]" value="${s.naziv}"/>
-                    <input type="text" class="form-control col" id="stavka" placeholder="cenaPoJedinici" name="stavka[${num}][cenaPoJedinici]" value="${s.cenaPoJedinici}"/>
+                    <input type="number" class="form-control col" id="stavka" placeholder="cenaPoJedinici" name="stavka[${num}][cenaPoJedinici]" value="${s.cenaPoJedinici}"/>
                     <input type="text" class="form-control col" id="stavka" placeholder="jedinicaMere" name="stavka[${num}][jedinicaMere]" value="${s.jedinicaMere}"/>
-                    <input type="text" class="form-control col" id="stavka" placeholder="kolicina" name="stavka[${num}][kolicina]" value="${s.kolicina}"/>
+                    <input type="number" class="form-control col" id="stavka" placeholder="kolicina" name="stavka[${num}][kolicina]" value="${s.kolicina}"/>
               </div>`;
 
                     num += 1;
@@ -462,7 +467,7 @@ app.post("/updateFaktura", (req, res) => {
         stavke: req.body.stavka,
         tip: req.body.tip
     }).catch((error) => {
-        console.log("Faktura nije izmenjena");
+        alert("Faktura nije izmenjena");
     }).then((response) => { res.redirect("/sveFakture") });
 
 });
@@ -470,6 +475,11 @@ app.post("/updateFaktura", (req, res) => {
 app.get("/balans", (req, res) => {
     let select = ``
     axios.get("http://localhost:5134/api/Preduzece").then((response: preduzeceResponse) => {
+        if (response.data.length == 0) {
+            alert("Nema preduzeca. Molimo Vas da unesete preduzece");
+            res.redirect("/addPreduzece");
+            return false;
+        }
         response.data.forEach(element => {
             select += `<option value="${element.pib}">${element.naziv}</option>`
         })
@@ -479,10 +489,17 @@ app.get("/balans", (req, res) => {
 
 app.post("/balans", (req, res) => {
     let select = ``
-    axios.post(`http://localhost:5134/api/Faktura/balans?pibStart=${req.body.pibStart}&dateStart=${req.body.dateStart}&dateEnd=${req.body.dateEnd}`).then((response: preduzeceResponse) => {
+    let date1 = req.body.dateStart;
+    let date2 = req.body.dateEnd;
+    if(date1>date2){
+        [date1, date2] = [date2, date1];
+    }
+    axios.post(`http://localhost:5134/api/Faktura/balans?pibStart=${req.body.pibStart}&dateStart=${date1}&dateEnd=${date2}`).then((response: preduzeceResponse) => {
         console.log(`Datumstart: ${req.body.dateStart}`);
         console.log(`Datumend: ${req.body.dateEnd}`);
-        alert(`Balans za: ${req.body.pibStart} u periodu od ${req.body.dateStart} do ${req.body.dateEnd} je: ${response.data}`);
+
+
+        alert(`Balans za: ${req.body.pibStart} u periodu od ${date1} do ${date2} je: ${response.data}`);
         res.redirect("/balans");
     });
 });
