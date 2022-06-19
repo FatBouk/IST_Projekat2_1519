@@ -31,7 +31,11 @@ namespace IST_Projekat2.Controllers
         [HttpPost("dodajPreduzece")]
         public IActionResult DodajNovoPreduzece([FromBody] Preduzece p)
         {
-            int id = lst.OrderByDescending(p => p.Id).First().Id + 1;
+            int id = 0;
+            if (lst.Count > 0)
+            {
+                id = lst.OrderByDescending(p => p.Id).First().Id + 1;
+            }
             p.Id = id;
             lst.Add(p);
             return Ok(SvaPreduzeca());

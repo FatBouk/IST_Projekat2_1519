@@ -17,7 +17,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseAuthorization();
-
+app.UseCors(options => options.AllowAnyOrigin());
 app.MapControllers();
 
 app.Run();

@@ -41,7 +41,11 @@ namespace IST_Projekat2.Controllers
         [HttpPost("dodajFakturu")]
         public IActionResult dodajFakturu2([FromBody]Faktura fak)
         {
-            int id = lst.OrderByDescending(p => p.Id).First().Id + 1;
+            int id = 0;
+            if (lst.Count > 0)
+            {
+                id = lst.OrderByDescending(p => p.Id).First().Id + 1;
+            }
             fak.Id = id;
             fak.calcCena();
             lst.Add(fak);
@@ -93,6 +97,10 @@ namespace IST_Projekat2.Controllers
         {
             var data = lst.Where(f => f.pibStart.ToLower().Contains(kriterijum.ToLower()))
                 .Select(k => k);
+            if (data.Count() == 0)
+            {
+                return BadRequest();
+            }
             return Ok(data);
         }
 
