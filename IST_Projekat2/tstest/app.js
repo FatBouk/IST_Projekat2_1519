@@ -58,7 +58,7 @@ var RadSaPrikazom = /** @class */ (function () {
         var prikaz = "";
         var stavkePrikaz = "";
         f.stavke.forEach(function (s) {
-            stavkePrikaz += "<p>Naziv: ".concat(s.naziv, " Cena po ").concat(s.jedinicaMere, ": ").concat(s.cenaPoJedinici, " Kolicina: ").concat(s.kolicina, "</p><hr>");
+            stavkePrikaz += "<p>\u2022 Naziv: ".concat(s.naziv, " \u2022 Cena po ").concat(s.jedinicaMere, ": ").concat(s.cenaPoJedinici, " \u2022 Kolicina: ").concat(s.kolicina, "</p><hr>");
         });
         prikaz += "\n                <tr>\n                    <td>".concat(f.pibStart, "</td>\n                    <td>").concat(f.pibEnd, "</td>\n                    <td>").concat(new Date(f.datumGen).toISOString().split('T')[0], "</td>\n                    <td>").concat(new Date(f.datumRok).toISOString().split('T')[0], "</td>\n                    <td>").concat(stavkePrikaz, "</td>\n                    <td>").concat(f.cena, "</td>\n                    <td>").concat(f.tip, "</td>\n                    <td><a href=\"/izmeniPreduzece/").concat(f.id, "\">Izmeni</a></td>\n                    <td><a href=\"/delete/").concat(f.id, "\">Obrisi</a></td>\n                </tr>\n            ");
         return prikaz;
@@ -185,6 +185,28 @@ app.get("/detailsFaktura/:id", function (req, res) {
     })["catch"](function (error) {
         console.log(error);
     });
+});
+app.get("/addFaktura", function (req, res) {
+    var select = "";
+    axios.get("http://localhost:5134/api/Preduzece").then(function (response) {
+        response.data.forEach(function (element) {
+            select += "<option value=\"".concat(element.pib, "\">").concat(element.naziv, "</option>");
+        });
+        res.send(RadSaPrikazom.procitajPogledZaNaziv("addFaktura").replace("##sel1", select).replace("##sel2", select));
+    });
+});
+app.post("/addFaktura", function (req, res) {
+    console.log(req.body);
+    axios.post("http://localhost:5134/api/Faktura/dodajFakturu", {
+        pibStart: req.body.pibStart,
+        pibEnd: req.body.pibEnd,
+        datumGen: new Date(),
+        datumRok: new Date(req.body.datumRok),
+        stavke: req.body.stavka,
+        tip: req.body.tip
+    })["catch"](function (error) {
+        console.log("Faktura nije dodata");
+    }).then(function (response) { res.redirect("/sveFakture"); });
 });
 //filterIznosStavka/{pib}/{kriterijum}/{value}
 app.post("/filterFaktura", function (req, res) {

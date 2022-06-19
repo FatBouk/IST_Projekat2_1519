@@ -114,23 +114,23 @@ class RadSaPrikazom {
         return prikaz
     }
 
-    static getPageFaktura(fakture: Array<Faktura>,page:number) {
+    static getPageFaktura(fakture: Array<Faktura>, page: number) {
         let prikaz = "";
         let stavkePrikaz = "";
-        fakture[page-1].stavke.forEach(s => {
+        fakture[page - 1].stavke.forEach(s => {
             stavkePrikaz += `<p>Naziv: ${s.naziv} Cena po ${s.jedinicaMere}: ${s.cenaPoJedinici} Kolicina: ${s.kolicina}</p><hr>`
         })
         prikaz += `
                 <tr>
-                    <td>${fakture[page-1].pibStart}</td>
-                    <td>${fakture[page-1].pibEnd}</td>
-                    <td>${new Date(fakture[page-1].datumGen).toISOString().split('T')[0]}</td>
-                    <td>${new Date(fakture[page-1].datumRok).toISOString().split('T')[0]}</td>
+                    <td>${fakture[page - 1].pibStart}</td>
+                    <td>${fakture[page - 1].pibEnd}</td>
+                    <td>${new Date(fakture[page - 1].datumGen).toISOString().split('T')[0]}</td>
+                    <td>${new Date(fakture[page - 1].datumRok).toISOString().split('T')[0]}</td>
                     <td>${stavkePrikaz}</td>
-                    <td>${fakture[page-1].cena}</td>
-                    <td>${fakture[page-1].tip}</td>
-                    <td><a href="/izmeniPreduzece/${fakture[page-1].id}">Izmeni</a></td>
-                    <td><a href="/delete/${fakture[page-1].id}">Obrisi</a></td>
+                    <td>${fakture[page - 1].cena}</td>
+                    <td>${fakture[page - 1].tip}</td>
+                    <td><a href="/izmeniPreduzece/${fakture[page - 1].id}">Izmeni</a></td>
+                    <td><a href="/delete/${fakture[page - 1].id}">Obrisi</a></td>
                 </tr>
             `;
         return prikaz
@@ -159,7 +159,7 @@ class RadSaPrikazom {
         let prikaz = "";
         let stavkePrikaz = "";
         f.stavke.forEach(s => {
-            stavkePrikaz += `<p>Naziv: ${s.naziv} Cena po ${s.jedinicaMere}: ${s.cenaPoJedinici} Kolicina: ${s.kolicina}</p><hr>`
+            stavkePrikaz += `<p>• Naziv: ${s.naziv} • Cena po ${s.jedinicaMere}: ${s.cenaPoJedinici} • Kolicina: ${s.kolicina}</p><hr>`
         })
         prikaz += `
                 <tr>
@@ -313,12 +313,12 @@ app.get("/getFakturaByPreduzecePage/:id/:page", (req, res) => {
         <td>PIB End</td>
         <td>Tip</td>
         `;
-        let count=response.data.length;
-        let buttons=``;
-        for(let i=0;i<count;i++){
-            buttons+=`<a href="/getFakturaByPreduzecePage/${req.params.id}/${i+1}" class="btn btn-primary m-1">${i+1}</a>`;
+        let count = response.data.length;
+        let buttons = ``;
+        for (let i = 0; i < count; i++) {
+            buttons += `<a href="/getFakturaByPreduzecePage/${req.params.id}/${i + 1}" class="btn btn-primary m-1">${i + 1}</a>`;
         }
-        res.send(RadSaPrikazom.procitajPogledZaNaziv("indexPage").replace("#{data}", RadSaPrikazom.getPageFaktura(response.data, req.params.page)).replace("##td", td).replace("##btn",buttons).replace("##{pib}",req.params.id));
+        res.send(RadSaPrikazom.procitajPogledZaNaziv("indexPage").replace("#{data}", RadSaPrikazom.getPageFaktura(response.data, req.params.page)).replace("##td", td).replace("##btn", buttons).replace("##{pib}", req.params.id));
     })
         .catch((error) => {
             console.log(error);
@@ -335,7 +335,7 @@ app.get("/sveFakture", (req, res) => {
         <td>PIB End</td>
         <td>Tip</td>
         `;
-        res.send(RadSaPrikazom.procitajPogledZaNaziv("indexPage").replace("#{data}", RadSaPrikazom.getArrayFaktura(response.data)).replace("##td", td).replace("##btn",``));
+        res.send(RadSaPrikazom.procitajPogledZaNaziv("indexPage").replace("#{data}", RadSaPrikazom.getArrayFaktura(response.data)).replace("##td", td).replace("##btn", ``));
     })
         .catch((error) => {
             console.log(error);
@@ -353,12 +353,40 @@ app.get("/detailsFaktura/:id", (req, res) => {
         <td>Cena</td>
         <td>Tip</td>
         `;
-        res.send(RadSaPrikazom.procitajPogledZaNaziv("indexPage").replace("#{data}", RadSaPrikazom.getDetailsFaktura(response.data)).replace("##td", td).replace("##btn",``));
+        res.send(RadSaPrikazom.procitajPogledZaNaziv("indexPage").replace("#{data}", RadSaPrikazom.getDetailsFaktura(response.data)).replace("##td", td).replace("##btn", ``));
     })
         .catch((error) => {
             console.log(error);
         });
 });
+
+
+app.get("/addFaktura", (req, res) => {
+    let select = ``
+    axios.get("http://localhost:5134/api/Preduzece").then((response: preduzeceResponse) => {
+        response.data.forEach(element => {
+            select+=`<option value="${element.pib}">${element.naziv}</option>`
+        })
+        res.send(RadSaPrikazom.procitajPogledZaNaziv("addFaktura").replace("##sel1",select).replace("##sel2",select));
+    });
+    
+});
+
+app.post("/addFaktura", (req, res) => {
+    console.log(req.body);
+    axios.post("http://localhost:5134/api/Faktura/dodajFakturu", {
+        pibStart: req.body.pibStart,
+        pibEnd: req.body.pibEnd,
+        datumGen: new Date(),
+        datumRok: new Date(req.body.datumRok),
+        stavke: req.body.stavka,
+        tip: req.body.tip
+    }).catch((error)=>{
+        console.log("Faktura nije dodata");
+    }).then((response)=>{res.redirect("/sveFakture")});
+
+});
+
 
 //filterIznosStavka/{pib}/{kriterijum}/{value}
 
