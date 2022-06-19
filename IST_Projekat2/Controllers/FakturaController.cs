@@ -11,7 +11,8 @@ namespace IST_Projekat2.Controllers
         static List<Faktura> lst = new List<Faktura>()
         {
             new Faktura(1, "299999999","999999999",DateTime.Now, DateTime.Now.AddDays(20), new List<Stavka>{new Stavka("Stavka 1", 20, "g",20), new Stavka("Stavka 2", 30, "g",30)},"Izlazna"),
-            new Faktura(2, "999999999","299999999",DateTime.Now, DateTime.Now.AddDays(30), new List<Stavka>{new Stavka("Stavka New 1", 30, "g",30), new Stavka("Stavka New 2", 11, "g",11)},"Ulazna")
+            new Faktura(2, "999999999","299999999",DateTime.Now, DateTime.Now.AddDays(30), new List<Stavka>{new Stavka("Stavka New 1", 30, "g",30), new Stavka("Stavka New 2", 11, "g",11)},"Ulazna"),
+            new Faktura(3, "999999999","299999999",DateTime.Now, DateTime.Now.AddDays(30), new List<Stavka>{new Stavka("Stavka New 1", 40, "g",40), new Stavka("Stavka New 2", 11, "g",11)},"Ulazna")
         };
         [HttpGet]
         public IActionResult SveFakture()
@@ -50,14 +51,15 @@ namespace IST_Projekat2.Controllers
         [HttpGet("izmeniFakturu/{id}")]
         public IActionResult IzmeniGet(int id)
         {
-            return Ok(GetById(id));
+            var faktura = lst.Where(p => p.Id == id).Select(p => p);
+            return Ok(faktura.SingleOrDefault());
         }
 
         [HttpGet("details/{id}")]
         public IActionResult GetById(int id)
         {
             var faktura = lst.Where(p => p.Id == id).Select(p => p);
-            return Ok(faktura);
+            return Ok(faktura.SingleOrDefault());
         }
 
         [HttpPost("izmeniFakturu")]
@@ -87,12 +89,41 @@ namespace IST_Projekat2.Controllers
 
 
         [HttpGet("filter/{kriterijum}")]
-        public IActionResult FiltrirajPreduzece(string kriterijum)
+        public IActionResult FiltrirajFakturu(string kriterijum)
         {
-            var data = lst.Where(f => f.pibStart.Contains(kriterijum))
+            var data = lst.Where(f => f.pibStart.ToLower().Contains(kriterijum.ToLower()))
                 .Select(k => k);
             return Ok(data);
         }
+
+        [HttpGet("filterIznosStavka/{pib}/{kriterijum}/{value}")]
+        public IActionResult FiltrirajFakturuIznosStavka(string pib, string kriterijum, string value)
+        {
+            var data = lst.Where(k=>k.pibStart==pib).Select(f=>f);
+            switch (kriterijum)
+            {
+                case "iznos":
+                    data = data.Where(f => f.cena>Convert.ToDouble(value)).Select(k => k);
+                    Console.WriteLine(value);
+                    break;
+                case "stavka":
+                    data = data.Where(f=>f.stavke.Any(s=>s.naziv.Contains(value))).Select(f=>f);
+                    break;
+            }
+
+
+            return Ok(data);
+        }
+
+        [HttpPost("filterPage/{kriterijum}/{page}")]
+        public IActionResult FiltrirajFakturuPage(string kriterijum, int page)
+        {
+            var data = lst.Where(f => f.pibStart.ToLower().Contains(kriterijum.ToLower())).Skip(page - 1).Take(1);
+            return Ok(data);
+            //var data = lst.OrderBy(p => p.Pib).ThenBy(p => p.Naziv).Skip((page-1)*pageSize).Take(pageSize);
+            //return Ok(data);
+        }
+
 
         [HttpPost("balans")]
         public IActionResult BalansPreduzeca([FromQuery]string pibStart, [FromQuery]DateTime dateStart, [FromQuery] DateTime dateEnd)
